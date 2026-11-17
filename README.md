@@ -1,5 +1,7 @@
 # PHOEBE Lab
 
+**[Open the live app on GitHub Pages](https://paulnord.github.io/phoebe-lab/)**
+
 An original, browser-based eclipsing-binary light-curve explorer. The browser
 runs **real PHOEBE 2.5.4**, including its compiled C++ extensions, through
 Pyodide/WebAssembly. GitHub Pages serves static files only; no PHOEBE server,
