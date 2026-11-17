@@ -33,6 +33,15 @@ Files are processed locally. There is no observation-upload or analytics endpoin
 
 ## Scope of this demonstration
 
+The starting model uses spherical stars for faster interaction. Switch on
+**Tidal distortion** to compute Roche surfaces; those calculations can take
+minutes per model in the browser. Irradiation is also optional. All modes use
+PHOEBE's numerical engine, including mesh generation and eclipse integration.
+On the development machine, the browser took about 5.5 seconds for the first
+spherical preview, 1.8 seconds for an inclination change, and 10.5 seconds for
+a seven-evaluation one-parameter fit. These are measurements, not guarantees;
+loading time and performance depend on the device and model.
+
 The model is a detached binary in Johnson V with primary mass 1.2 solar masses,
 primary temperature 6,300 K, a Keplerian orbit, PHOEBE atmosphere/limb-darkening
 defaults, selectable Roche distortion and irradiation. Radii are fractions of
@@ -107,6 +116,15 @@ python3 tests/browser_smoke.py http://127.0.0.1:8765/
 The reference curve in `tests/native-reference.json` was produced by the same
 model wrapper using native PHOEBE 2.5.4. Tests run the WebAssembly engine, compare
 the actual calculated curve, and exercise user controls and data import.
+The spherical model is compared at an absolute tolerance of 1e-7 in normalized
+flux. An independent local comparison agreed to roughly 1e-11. The coarse Roche
+mesh showed platform differences up to 0.00082; inspect resolution convergence
+before drawing scientific conclusions from small differences.
+
+Regenerate the synthetic data and reference using native PHOEBE with
+`python tools/generate_example.py`. Identical parameter sets reuse a small
+in-memory geometry cache, so changing only the observations avoids repeating
+the surface calculation. New physical parameter values are calculated by PHOEBE.
 
 GPL-3.0-or-later. See LICENSE and NOTICE.txt. Independent educational prototype;
 not an official PHOEBE distribution or a complete scientific analysis pipeline.

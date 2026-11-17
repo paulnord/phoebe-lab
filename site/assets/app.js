@@ -1,5 +1,5 @@
 const $ = (id) => document.getElementById(id);
-const DEFAULTS = {inclination:84.5,radius_primary:.21,radius_secondary:.17,temperature_ratio:.84,mass_ratio:.75,eccentricity:0,omega:90,period:1.8,epoch:0,distortion:true,irradiation:false};
+const DEFAULTS = {inclination:84.5,radius_primary:.21,radius_secondary:.17,temperature_ratio:.84,mass_ratio:.75,eccentricity:0,omega:90,period:1.8,epoch:0,distortion:false,irradiation:false};
 const GROUPS = [
   {name:'Orbit',items:[
     ['inclination','Inclination',65,90,.1,1,'°','90° is edge-on. Lower angles reduce eclipses.'],
@@ -67,7 +67,7 @@ function updateControlValues() {
   Object.assign($('primary-star').style,{width:`${a}px`,height:`${a}px`});Object.assign($('secondary-star').style,{width:`${b}px`,height:`${b}px`});
 }
 
-function parametersChanged() {state.revision++;status(state.busy?'Parameters changed; latest model is queued.':'Parameters changed; updating the model…','busy');drawPlots();scheduleCompute();}
+function parametersChanged() {state.revision++;$('export-button').disabled=true;$('fit-button').disabled=true;status(state.busy?'Parameters changed; latest model is queued.':'Parameters changed; updating the model…','busy');drawPlots();scheduleCompute();}
 function scheduleCompute(delay=450) {clearTimeout(computeTimer);computeTimer=setTimeout(()=>requestModel('compute'),delay);}
 function setBusy(busy,fitting=false) {
   state.busy=busy;state.fitting=fitting;
@@ -120,7 +120,7 @@ function startEngine() {
       if(!state.result){$('plot-placeholder').hidden=true;drawPlots();}
     }
   };
-  state.worker.onerror=(e)=>{status(e.message||'The browser worker stopped.','error');setBusy(false);$('engine-retry').hidden=false;$('engine-banner').hidden=false;};
+  state.worker.onerror=(e)=>{state.ready=false;status(e.message||'The browser worker stopped.','error');setBusy(false);$('engine-title').textContent='The browser engine stopped';$('engine-detail').textContent=e.message||'Restart the engine to continue.';$('engine-retry').hidden=false;$('engine-banner').hidden=false;};
   state.worker.postMessage({type:'initialize'});
 }
 
@@ -183,6 +183,7 @@ function drawChart(canvas,residual) {
 }
 
 function updateStats() {
+  $('residual-summary').textContent=state.result?`${state.result.comparison.residual.length} points`:'—';
   const c=state.result?.comparison;$('rms-stat').textContent=c?c.rms.toFixed(4):'—';$('chi-stat').textContent=c?.reduced_chi2!=null?c.reduced_chi2.toFixed(2):'—';
   $('chi-note').textContent=c?.reduced_chi2!=null?'Uses measurement errors':'Add errors to estimate χ²';
 }

@@ -56,8 +56,7 @@ async def main():
         await page.screenshot(path=str(ROOT / ".qa/desktop.png"), full_page=True)
         difference = float(np.max(np.abs(np.asarray(result["model"])-reference["model"])))
         print("Native comparison max absolute difference:", difference, "; model seconds:", result["seconds"], flush=True)
-        # Low-resolution PHOEBE surface triangulations can differ across platforms.
-        np.testing.assert_allclose(result["model"], reference["model"], atol=1e-3, rtol=0)
+        np.testing.assert_allclose(result["model"], reference["model"], atol=1e-7, rtol=0)
         await page.evaluate("window.testProfile=" + ("true" if os.getenv("PHOEBE_PROFILE") else "false"))
         await page.locator('#number-inclination').fill('87')
         await page.locator('#number-inclination').press('Tab')
@@ -83,6 +82,7 @@ async def main():
             rows.append(f'{phase},{11-2.5*np.log10(flux)},{sigma/(.4*np.log(10)*flux)}')
         await page.locator('#import-button').click()
         await page.locator('#data-file').set_input_files({'name':'magnitude-test.csv','mimeType':'text/csv','buffer':'\n'.join(rows).encode()})
+        await page.locator('#import-options').wait_for(state='visible')
         assert await page.locator('#y-kind').input_value() == 'magnitude'
         await page.locator('#load-file-button').click()
         await page.wait_for_function('window.engineResults.length>=3', timeout=300000)
@@ -98,7 +98,14 @@ async def main():
         await page.locator('input[name=fit][value=radius_primary]').check()
         await page.locator('#fit-form button[type=submit]').click()
         assert 'one or two' in await page.locator('#fit-error').inner_text()
-        await page.locator('#fit-dialog .close-dialog').first.click()
+        await page.locator('input[name=fit][value=radius_primary]').uncheck()
+        await page.locator('input[name=fit][value=temperature_ratio]').uncheck()
+        await page.locator('#fit-form button[type=submit]').click()
+        await page.wait_for_function("window.engineResults.some(m=>m.operation==='fit')", timeout=180000)
+        fitted = await page.evaluate("window.engineResults.find(m=>m.operation==='fit').result")
+        assert fitted['fit']['parameters'] == ['inclination']
+        assert fitted['comparison']['rms'] <= changed['comparison']['rms'] + 1e-10
+        print('Real browser fit passed:', fitted['fit']['evaluations'], 'evaluations in', fitted['seconds'], 'seconds.', flush=True)
         await page.set_viewport_size({'width':390,'height':844})
         assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         await page.screenshot(path=str(ROOT / '.qa/mobile.png'), full_page=True)

@@ -9,11 +9,12 @@ from functools import lru_cache
 import numpy as np
 import phoebe
 
+
 DEFAULTS = {
     "inclination": 84.5, "radius_primary": 0.21, "radius_secondary": 0.17,
     "temperature_ratio": 0.84, "mass_ratio": 0.75, "eccentricity": 0.0,
     "omega": 90.0, "period": 1.8, "epoch": 0.0,
-    "distortion": True, "irradiation": False,
+    "distortion": False, "irradiation": False,
 }
 LIMITS = {
     "inclination": (65.0, 90.0), "radius_primary": (0.10, 0.32),
